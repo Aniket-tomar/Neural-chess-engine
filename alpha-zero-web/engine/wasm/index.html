@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WASM Chess Engine Test</title>
+    <style> body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; } </style>
+</head>
+<body>
+    <h2>AlphaZero Web: C++ to WASM Integration Test</h2>
+    <div id="output">Loading WebAssembly...</div>
+
+    <!-- Emscripten generates a UMD/Modularized file. We load it as a standard script here for testing -->
+    <script src="chess_engine.js"></script>
+    <script>
+        createChessModule().then((Module) => {
+            const out = document.getElementById('output');
+            out.innerHTML = "WASM Module Loaded Successfully.<br><br>";
+
+            // 1. Initialize C++ Engine
+            const engine = new Module.ChessEngine();
+            out.innerHTML += "Engine initialized (Default Start Position).<br>";
+
+            // 2. Fetch Legal Moves from C++
+            const moves = engine.getLegalMoves();
+            out.innerHTML += `Legal moves found: ${moves.size()}<br><br>`;
+
+            out.innerHTML += "<strong>Available Moves (from -> to [flags]):</strong><br>";
+            for (let i = 0; i < moves.size(); i++) {
+                const m = moves.get(i);
+                out.innerHTML += `- Square ${m.from} to ${m.to} [flag: ${m.flags}]<br>`;
+            }
+
+            // 3. Make a move (e2e4 -> square 12 to 28)
+            out.innerHTML += "<br><strong>Making move 12 to 28 (e2-e4)...</strong><br>";
+            engine.makeMove(12, 28, 0);
+            
+            const newMoves = engine.getLegalMoves();
+            out.innerHTML += `Legal moves for Black after e4: ${newMoves.size()}<br>`;
+
+            // Clean up C++ memory bound to JS
+            moves.delete();
+            newMoves.delete();
+            engine.delete();
+        });
+    </script>
+</body>
+</html>
